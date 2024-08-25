@@ -8,7 +8,8 @@ import Textarea from "../../ui/Textarea";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { createCabin } from "../../services/apiCabins";
+import { createCabin, updateCabin } from "../../services/apiCabins";
+import { useEffect, useRef } from "react";
 
 const FormRow = styled.div`
   display: grid;
@@ -46,15 +47,21 @@ const Error = styled.span`
   color: var(--color-red-700);
 `;
 
-function CreateCabinForm() {
-  const { register, handleSubmit, reset, getValues, formState } = useForm();
+function CreateCabinForm({ cabin, closeForm }) {
+  const { register, handleSubmit, reset, getValues, formState, setValue } =
+    useForm({
+      defaultValues: cabin || {},
+    });
   const { errors } = formState;
 
   const queryClient = useQueryClient();
-  const { mutate, isLoading: isCreating } = useMutation({
-    mutationFn: createCabin,
+
+  const { mutate, isLoading: isCreatingOrUpdating } = useMutation({
+    mutationFn: !cabin
+      ? createCabin
+      : ({ oldCabin, newCabin }) => updateCabin(oldCabin, newCabin),
     onSuccess: () => {
-      toast.success("Cabin has been created");
+      toast.success(`Cabin has been ${!cabin ? "created" : "updated"}!`);
       queryClient.invalidateQueries({
         queryKey: ["cabin"],
       });
@@ -64,10 +71,37 @@ function CreateCabinForm() {
   });
 
   function submit(data) {
-    mutate({ ...data, image: data.image[0] });
+    if (!cabin) mutate({ ...data, image: data.image[0] });
+    else
+      mutate({
+        oldCabin: cabin,
+        newCabin: { ...data, image: data.image[0] },
+      });
   }
 
   // function ifNotPassedValidation(errors) {} // optional
+  const inputFieldUniqueId = "image" + (cabin ? cabin.id : "");
+
+  useEffect(() => {
+    if (cabin) {
+      const fileInput = document.querySelector(`#${inputFieldUniqueId}`);
+      (async () => {
+        const imgUrl = cabin.image;
+        const dataTransfer = new DataTransfer();
+        if (imgUrl) {
+          const response = await fetch(imgUrl);
+          const blob = await response.blob();
+          const file = new File([blob], imgUrl.split("/").at(-1), {
+            type: blob.type,
+          });
+          dataTransfer.items.add(file);
+        }
+        setValue("image", dataTransfer.files);
+        // this line in requied so "No file chosen" subtitle display the actuall uploaded file
+        fileInput.files = dataTransfer.files;
+      })();
+    }
+  }, []);
 
   return (
     <Form onSubmit={handleSubmit(submit)}>
@@ -126,7 +160,7 @@ function CreateCabinForm() {
           {...register("discount", {
             required: "Please enter a cabin discount",
             validate: (value) =>
-              value <= getValues().regularPrice ||
+              +value <= +getValues().regularPrice ||
               "Discount should be less than regular price",
           })}
         />
@@ -157,20 +191,23 @@ function CreateCabinForm() {
       <FormRow>
         <Label htmlFor="image">Cabin photo</Label>
         <FileInput
-          id="image"
+          id={inputFieldUniqueId}
           accept="image/*"
-          {...register("image", {
-            required: "This field is required",
-          })}
+          {...register("image")}
         />
       </FormRow>
 
       <FormRow>
         {/* type is an HTML attribute! */}
-        <Button disabled={isCreating} variation="secondary" type="reset">
+        <Button
+          onClick={closeForm}
+          disabled={isCreatingOrUpdating}
+          variation="secondary"
+          type="button"
+        >
           Cancel
         </Button>
-        <Button>Create cabin</Button>
+        <Button>{!cabin ? `Create cabin` : `Edit cabin`}</Button>
       </FormRow>
     </Form>
   );

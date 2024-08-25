@@ -1,8 +1,13 @@
-import styled from "styled-components";
-import { formatCurrency } from "../../utils/helpers";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteCabin } from "../../services/apiCabins";
 import toast from "react-hot-toast";
+
+import styled from "styled-components";
+
+import CreateCabinForm from "./CreateCabinForm";
+import { formatCurrency } from "../../utils/helpers";
+import { deleteCabin } from "../../services/apiCabins";
+import { supabaseUrl } from "../../services/supabase";
 
 const TableRow = styled.div`
   display: grid;
@@ -67,17 +72,34 @@ function CabinRow({ cabin }) {
     onError: (e) => toast.error(e.message),
   });
 
+  const [showEditForm, setShowEditForm] = useState(false);
+
+  function closeForm() {
+    setShowEditForm(false);
+  }
+
   return (
-    <TableRow>
-      <Img src={image || "/data/cabins/cabin-001.jpg"} />
-      <Cabin>{name}</Cabin>
-      <div>Fits up to {maxCapacity} guests</div>
-      <Price>{formatCurrency(regularPrice)}</Price>
-      <Discount>{formatCurrency(discount)}</Discount>
-      <button disabled={isDeleteting} onClick={() => mutate(cabinId)}>
-        Delete
-      </button>
-    </TableRow>
+    <>
+      <TableRow>
+        <Img
+          src={
+            image ||
+            `${supabaseUrl}/storage/v1/object/public/cabin-images/no-image.svg`
+          }
+        />
+        <Cabin>{name}</Cabin>
+        <div>Fits up to {maxCapacity} guests</div>
+        <Price>{formatCurrency(regularPrice)}</Price>
+        <Discount>{formatCurrency(discount)}</Discount>
+        <div>
+          <button onClick={() => setShowEditForm(!showEditForm)}>Edit</button>
+          <button disabled={isDeleteting} onClick={() => mutate(cabinId)}>
+            Delete
+          </button>
+        </div>
+      </TableRow>
+      {showEditForm && <CreateCabinForm closeForm={closeForm} cabin={cabin} />}
+    </>
   );
 }
 

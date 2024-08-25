@@ -10,7 +10,6 @@ import CreateCabinForm from "../features/cabins/CreateCabinForm";
 
 function Cabins() {
   const [showForm, setShowForm] = useState(false);
-
   return (
     <>
       <Row type="horizontal">
@@ -20,7 +19,7 @@ function Cabins() {
       <Row>
         <CabinTable />
         <Button onClick={() => setShowForm(!showForm)}>Add new cabin</Button>
-        {showForm && <CreateCabinForm />}
+        {showForm && <CreateCabinForm closeForm={() => setShowForm(false)} />}
       </Row>
     </>
   );
