@@ -1,3 +1,7 @@
+import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import styled from "styled-components";
 
 import Input from "../../ui/Input";
@@ -5,11 +9,9 @@ import Form from "../../ui/Form";
 import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
-import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
-import { createCabin, updateCabin } from "../../services/apiCabins";
-import { useEffect, useRef } from "react";
+
+import useImageFilePreload from "./useImageFilePreload";
+import useSubmitCabin from "./useSubmitCabin";
 
 const FormRow = styled.div`
   display: grid;
@@ -54,55 +56,9 @@ function CreateCabinForm({ cabin, closeForm }) {
     });
   const { errors } = formState;
 
-  const queryClient = useQueryClient();
-
-  const { mutate, isLoading: isCreatingOrUpdating } = useMutation({
-    mutationFn: !cabin
-      ? createCabin
-      : ({ oldCabin, newCabin }) => updateCabin(oldCabin, newCabin),
-    onSuccess: () => {
-      toast.success(`Cabin has been ${!cabin ? "created" : "updated"}!`);
-      queryClient.invalidateQueries({
-        queryKey: ["cabin"],
-      });
-      reset();
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  function submit(data) {
-    if (!cabin) mutate({ ...data, image: data.image[0] });
-    else
-      mutate({
-        oldCabin: cabin,
-        newCabin: { ...data, image: data.image[0] },
-      });
-  }
-
+  const { isSubmitting, submit } = useSubmitCabin(cabin, reset);
+  const { inputFieldUniqueId } = useImageFilePreload(cabin, setValue);
   // function ifNotPassedValidation(errors) {} // optional
-  const inputFieldUniqueId = "image" + (cabin ? cabin.id : "");
-
-  useEffect(() => {
-    if (cabin) {
-      const fileInput = document.querySelector(`#${inputFieldUniqueId}`);
-      (async () => {
-        const imgUrl = cabin.image;
-        const dataTransfer = new DataTransfer();
-        if (imgUrl) {
-          const response = await fetch(imgUrl);
-          const blob = await response.blob();
-          const file = new File([blob], imgUrl.split("/").at(-1), {
-            type: blob.type,
-          });
-          dataTransfer.items.add(file);
-        }
-        setValue("image", dataTransfer.files);
-        // this line in requied so "No file chosen" subtitle display the actuall uploaded file
-        fileInput.files = dataTransfer.files;
-      })();
-    }
-  }, []);
-
   return (
     <Form onSubmit={handleSubmit(submit)}>
       <FormRow>
@@ -201,7 +157,7 @@ function CreateCabinForm({ cabin, closeForm }) {
         {/* type is an HTML attribute! */}
         <Button
           onClick={closeForm}
-          disabled={isCreatingOrUpdating}
+          disabled={isSubmitting}
           variation="secondary"
           type="button"
         >
