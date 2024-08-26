@@ -37,6 +37,13 @@ export async function deleteCabin(id) {
 
   if (!fetchedData.image) return;
 
+  const { count, error: countError } = await supabase
+    .from("cabins")
+    .select("*", { count: "exact" })
+    .eq("image", fetchedData.image);
+
+  if (count > 0 || countError) return;
+
   const { error: errorOnDeletingImageFromStorage, data: deletedImage } =
     await supabase.storage
       .from("cabin-images")
@@ -58,7 +65,14 @@ export async function createCabin(newCabin) {
     "/",
     ""
   );
-  const imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
+
+  // Check if we are duplicating the cabin
+  const isBeingDuplicated =
+    typeof newCabin.image === "string" &&
+    newCabin.image.startsWith(supabaseUrl);
+  const imagePath = isBeingDuplicated
+    ? newCabin.image
+    : `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;
 
   const { error, data } = await supabase
     .from("cabins")
@@ -69,7 +83,7 @@ export async function createCabin(newCabin) {
     throw throwable;
   }
 
-  if (!newCabin.image) return;
+  if (!newCabin.image || isBeingDuplicated) return;
 
   const { error: storageError } = await supabase.storage
     .from("cabin-images")
@@ -100,7 +114,7 @@ export async function updateCabin(oldCabin, newCabin) {
   } else {
     // Else we need to upload a new image and delete IF the old one was a picture and NOT NULL
     imageName = `${Math.random()}-${newCabin.image?.name}`.replaceAll("/", "");
-    imageNameToBeDeletedFromStorage = oldCabin.image?.split("/")?.at(-1); // if null => ?. will result in undefined, if not need to extract IMAGE_NAME from full URL
+    imageNameToBeDeletedFromStorage = oldCabin.image?.split("/")?.at(-1); // if null => ?. will result in undefined, if not need to extract IMAGE_NAME from full
   }
 
   const imagePath = `${supabaseUrl}/storage/v1/object/public/cabin-images/${imageName}`;

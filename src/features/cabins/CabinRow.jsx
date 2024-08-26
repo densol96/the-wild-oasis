@@ -5,6 +5,7 @@ import CreateCabinForm from "./CreateCabinForm";
 import { formatCurrency } from "../../utils/helpers";
 import { supabaseUrl } from "../../services/supabase";
 import useDeleteCabin from "./useDeleteCabin";
+import useCreateCabin from "./useCreateCabin";
 
 const TableRow = styled.div`
   display: grid;
@@ -53,13 +54,27 @@ function CabinRow({ cabin }) {
     regularPrice,
     discount,
     image,
+    description,
   } = cabin;
 
   const { isDeleteting, deleteCabin } = useDeleteCabin();
+  const { isCreating, createCabin } = useCreateCabin();
+  const isWorking = isDeleteting || isCreating;
   const [showEditForm, setShowEditForm] = useState(false);
 
   function closeForm() {
     setShowEditForm(false);
+  }
+
+  function duplicateCabin() {
+    createCabin({
+      name: "Copy of " + name,
+      maxCapacity,
+      regularPrice,
+      discount,
+      image,
+      description,
+    });
   }
 
   return (
@@ -78,8 +93,16 @@ function CabinRow({ cabin }) {
           {discount ? formatCurrency(discount) : <>&mdash;</>}
         </Discount>
         <div>
-          <button onClick={() => setShowEditForm(!showEditForm)}>Edit</button>
-          <button disabled={isDeleteting} onClick={() => deleteCabin(cabinId)}>
+          <button disabled={isWorking} onClick={() => duplicateCabin()}>
+            Duplicate
+          </button>
+          <button
+            disabled={isWorking}
+            onClick={() => setShowEditForm(!showEditForm)}
+          >
+            Edit
+          </button>
+          <button disabled={isWorking} onClick={() => deleteCabin(cabinId)}>
             Delete
           </button>
         </div>

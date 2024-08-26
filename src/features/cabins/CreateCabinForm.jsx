@@ -11,7 +11,8 @@ import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 
 import useImageFilePreload from "./useImageFilePreload";
-import useSubmitCabin from "./useSubmitCabin";
+import useCreateCabin from "./useCreateCabin";
+import useEditCabin from "./useEditCabin";
 
 const FormRow = styled.div`
   display: grid;
@@ -56,8 +57,21 @@ function CreateCabinForm({ cabin, closeForm }) {
     });
   const { errors } = formState;
 
-  const { isSubmitting, submit } = useSubmitCabin(cabin, reset);
   const { inputFieldUniqueId } = useImageFilePreload(cabin, setValue);
+  const { isCreating, createCabin } = useCreateCabin(reset);
+  const { isUpdating, updateCabin } = useEditCabin(reset);
+
+  const isSubmitting = isCreating || isUpdating;
+
+  function submit(data) {
+    if (!cabin) createCabin({ ...data, image: data.image[0] });
+    else
+      updateCabin({
+        oldCabin: cabin,
+        newCabin: { ...data, image: data.image[0] },
+      });
+  }
+
   // function ifNotPassedValidation(errors) {} // optional
   return (
     <Form onSubmit={handleSubmit(submit)}>
