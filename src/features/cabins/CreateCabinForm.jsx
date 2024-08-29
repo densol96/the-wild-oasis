@@ -50,7 +50,7 @@ const Error = styled.span`
   color: var(--color-red-700);
 `;
 
-function CreateCabinForm({ cabin, closeForm }) {
+function CreateCabinForm({ cabin, onCloseModal }) {
   const { register, handleSubmit, reset, getValues, formState, setValue } =
     useForm({
       defaultValues: cabin || {},
@@ -74,7 +74,10 @@ function CreateCabinForm({ cabin, closeForm }) {
 
   // function ifNotPassedValidation(errors) {} // optional
   return (
-    <Form onSubmit={handleSubmit(submit)}>
+    <Form
+      onSubmit={handleSubmit(submit)}
+      type={onCloseModal ? "modal" : "regular"}
+    >
       <FormRow>
         <Label htmlFor="name">Cabin name</Label>
         <Input
@@ -170,7 +173,7 @@ function CreateCabinForm({ cabin, closeForm }) {
       <FormRow>
         {/* type is an HTML attribute! */}
         <Button
-          onClick={closeForm}
+          onClick={() => onCloseModal?.()}
           disabled={isSubmitting}
           variation="secondary"
           type="button"
