@@ -9,41 +9,11 @@ import Form from "../../ui/Form";
 import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
+import FormRow from "../../ui/FormRow";
 
 import useImageFilePreload from "./useImageFilePreload";
 import useCreateCabin from "./useCreateCabin";
 import useEditCabin from "./useEditCabin";
-
-const FormRow = styled.div`
-  display: grid;
-  align-items: center;
-  grid-template-columns: 24rem 1fr 1.2fr;
-  gap: 2.4rem;
-
-  padding: 1.2rem 0;
-
-  &:first-child {
-    padding-top: 0;
-  }
-
-  &:last-child {
-    padding-bottom: 0;
-  }
-
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--color-grey-100);
-  }
-
-  &:has(button) {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1.2rem;
-  }
-`;
-
-const Label = styled.label`
-  font-weight: 500;
-`;
 
 const Error = styled.span`
   font-size: 1.4rem;
@@ -74,12 +44,8 @@ function CreateCabinForm({ cabin, onCloseModal }) {
 
   // function ifNotPassedValidation(errors) {} // optional
   return (
-    <Form
-      onSubmit={handleSubmit(submit)}
-      type={onCloseModal ? "modal" : "regular"}
-    >
-      <FormRow>
-        <Label htmlFor="name">Cabin name</Label>
+    <Form onSubmit={handleSubmit(submit)}>
+      <FormRow label="Cabin name">
         <Input
           type="text"
           id="name"
@@ -94,8 +60,7 @@ function CreateCabinForm({ cabin, onCloseModal }) {
         {errors?.name?.message && <Error>{errors?.name?.message}</Error>}
       </FormRow>
 
-      <FormRow>
-        <Label htmlFor="maxCapacity">Maximum capacity</Label>
+      <FormRow label="Maximum capacity">
         <Input
           type="number"
           id="maxCapacity"
@@ -109,8 +74,7 @@ function CreateCabinForm({ cabin, onCloseModal }) {
         )}
       </FormRow>
 
-      <FormRow>
-        <Label htmlFor="regularPrice">Regular price</Label>
+      <FormRow label="Regular price">
         <Input
           type="number"
           id="regularPrice"
@@ -124,8 +88,7 @@ function CreateCabinForm({ cabin, onCloseModal }) {
         )}
       </FormRow>
 
-      <FormRow>
-        <Label htmlFor="discount">Discount</Label>
+      <FormRow label="Discount">
         <Input
           type="number"
           id="discount"
@@ -142,8 +105,7 @@ function CreateCabinForm({ cabin, onCloseModal }) {
         )}
       </FormRow>
 
-      <FormRow>
-        <Label htmlFor="description">Description for website</Label>
+      <FormRow label="Description for website">
         <Textarea
           type="number"
           id="description"
@@ -161,8 +123,7 @@ function CreateCabinForm({ cabin, onCloseModal }) {
         )}
       </FormRow>
 
-      <FormRow>
-        <Label htmlFor="image">Cabin photo</Label>
+      <FormRow label="Cabin photo">
         <FileInput
           id={inputFieldUniqueId}
           accept="image/*"
@@ -171,7 +132,6 @@ function CreateCabinForm({ cabin, onCloseModal }) {
       </FormRow>
 
       <FormRow>
-        {/* type is an HTML attribute! */}
         <Button
           onClick={() => onCloseModal?.()}
           disabled={isSubmitting}

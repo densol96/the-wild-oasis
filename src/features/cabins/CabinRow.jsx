@@ -1,23 +1,18 @@
 import { useState } from "react";
 import styled from "styled-components";
+import { HiPencil, HiTrash } from "react-icons/hi";
+import { HiSquare2Stack } from "react-icons/hi2";
 
 import CreateCabinForm from "./CreateCabinForm";
-import { formatCurrency } from "../../utils/helpers";
-import { supabaseUrl } from "../../services/supabase";
+import Modal from "../../ui/Modal";
+import ConfirmDelete from "../../ui/ConfirmDelete";
+import Menus from "../../ui/Menus";
+
 import useDeleteCabin from "./useDeleteCabin";
 import useCreateCabin from "./useCreateCabin";
-
-const TableRow = styled.div`
-  display: grid;
-  grid-template-columns: 0.6fr 1.8fr 2.2fr 1fr 1fr 1fr;
-  column-gap: 2.4rem;
-  align-items: center;
-  padding: 1.4rem 2.4rem;
-
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--color-grey-100);
-  }
-`;
+import { formatCurrency } from "../../utils/helpers";
+import { supabaseUrl } from "../../services/supabase";
+import Table from "../../ui/Table";
 
 const Img = styled.img`
   display: block;
@@ -60,11 +55,6 @@ function CabinRow({ cabin }) {
   const { isDeleteting, deleteCabin } = useDeleteCabin();
   const { isCreating, createCabin } = useCreateCabin();
   const isWorking = isDeleteting || isCreating;
-  const [showEditForm, setShowEditForm] = useState(false);
-
-  function closeForm() {
-    setShowEditForm(false);
-  }
 
   function duplicateCabin() {
     createCabin({
@@ -79,7 +69,7 @@ function CabinRow({ cabin }) {
 
   return (
     <>
-      <TableRow>
+      <Table.Row>
         <Img
           src={
             image ||
@@ -93,21 +83,65 @@ function CabinRow({ cabin }) {
           {discount ? formatCurrency(discount) : <>&mdash;</>}
         </Discount>
         <div>
-          <button disabled={isWorking} onClick={() => duplicateCabin()}>
-            Duplicate
+          {/* <button disabled={isWorking} onClick={() => duplicateCabin()}>
+            <HiSquare2Stack />
           </button>
-          <button
-            disabled={isWorking}
-            onClick={() => setShowEditForm(!showEditForm)}
-          >
-            Edit
-          </button>
-          <button disabled={isWorking} onClick={() => deleteCabin(cabinId)}>
-            Delete
-          </button>
+          <Modal>
+            <Modal.Open opensWhat="edit-form">
+              <button disabled={isWorking}>
+                <HiPencil />
+              </button>
+            </Modal.Open>
+            <Modal.Window name="edit-form">
+              <CreateCabinForm />
+            </Modal.Window>
+            <Modal.Open opensWhat="delete-form">
+              <button disabled={isWorking}>
+                <HiTrash />
+              </button>
+            </Modal.Open>
+            <Modal.Window name="delete-form">
+              <ConfirmDelete
+                disabled={isWorking}
+                resourceName="cabin"
+                onConfirm={() => deleteCabin(cabinId)}
+              />
+            </Modal.Window>
+          </Modal> */}
+
+          <Menus.Menu>
+            <Menus.Toggle id={cabinId} />
+
+            <Menus.List id={cabinId}>
+              <button disabled={isWorking} onClick={() => duplicateCabin()}>
+                <Menus.Button>Duplicate</Menus.Button>
+              </button>
+              <Modal>
+                <Modal.Open opensWhat="edit-form">
+                  <button disabled={isWorking}>
+                    <Menus.Button>Edit</Menus.Button>
+                  </button>
+                </Modal.Open>
+                <Modal.Window name="edit-form">
+                  <CreateCabinForm />
+                </Modal.Window>
+                <Modal.Open opensWhat="delete-form">
+                  <button disabled={isWorking}>
+                    <Menus.Button>Delete</Menus.Button>
+                  </button>
+                </Modal.Open>
+                <Modal.Window name="delete-form">
+                  <ConfirmDelete
+                    disabled={isWorking}
+                    resourceName="cabin"
+                    onConfirm={() => deleteCabin(cabinId)}
+                  />
+                </Modal.Window>
+              </Modal>
+            </Menus.List>
+          </Menus.Menu>
         </div>
-      </TableRow>
-      {showEditForm && <CreateCabinForm closeForm={closeForm} cabin={cabin} />}
+      </Table.Row>
     </>
   );
 }

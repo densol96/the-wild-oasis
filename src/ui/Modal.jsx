@@ -77,13 +77,13 @@ function Modal({ children }) {
 function Open({ children, opensWhat }) {
   const { open } = useContext(ModalContext);
 
-  return <div onClick={() => open(opensWhat)}>{children}</div>;
+  return cloneElement(children, { onClick: () => open(opensWhat) });
 }
 
 function Window({ children, name }) {
   const { openName, close } = useContext(ModalContext);
 
-  const ref = useOutsideModalClose(ref, close);
+  const ref = useOutsideModalClose(close);
 
   if (openName !== name) return null;
 

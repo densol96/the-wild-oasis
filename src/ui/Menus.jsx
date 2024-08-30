@@ -1,3 +1,4 @@
+import { createContext, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 
 const StyledMenu = styled.div`
@@ -60,3 +61,49 @@ const StyledButton = styled.button`
     transition: all 0.3s;
   }
 `;
+
+const MenusContext = createContext();
+
+function Menus({ children }) {
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const openMenu = useCallback((id) => setActiveMenuId(id), [setActiveMenuId]);
+  const closeMenu = useCallback(() => setActiveMenuId(null), [setActiveMenuId]);
+  const isOpen = useCallback(
+    (id) => id === activeMenuId,
+    [setActiveMenuId, activeMenuId]
+  );
+
+  return (
+    <MenusContext.Provider value={{ openMenu, closeMenu, isOpen }}>
+      {children}
+    </MenusContext.Provider>
+  );
+}
+
+function Menu({ children }) {
+  return <div>{children}</div>;
+}
+function Toggle({ id }) {
+  const { isOpen, openMenu, closeMenu } = useContext(MenusContext);
+  const isClosed = !isOpen(id);
+  return (
+    <button onClick={() => (isClosed ? openMenu(id) : closeMenu())}>
+      {isClosed ? "OPEN" : "CLOSE"}
+    </button>
+  );
+}
+function List({ id, children }) {
+  const { isOpen } = useContext(MenusContext);
+  if (!isOpen(id)) return null;
+  return <div>{children}</div>;
+}
+function Button({ children }) {
+  return <button>{children}</button>;
+}
+
+Menus.Menu = Menu;
+Menus.Toggle = Toggle;
+Menus.List = List;
+Menus.Button = Button;
+
+export default Menus;
