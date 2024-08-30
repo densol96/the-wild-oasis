@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
 
-function useOutsideModalClose(close) {
+function useOutsideModalClose(close, additionalConditional) {
   const ref = useRef(); // modalWinndow
   useEffect(() => {
     const handleClick = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
-        close();
+        if (additionalConditional) {
+          additionalConditional(e.target) && close();
+        } else {
+          close();
+        }
       }
     };
     document.addEventListener("click", handleClick, true);

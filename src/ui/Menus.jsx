@@ -1,10 +1,14 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
+import { HiEllipsisVertical } from "react-icons/hi2";
+import { createPortal } from "react-dom";
+import useOutsideModalClose from "../hooks/useOutsideModalClose";
 
 const StyledMenu = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  position: relative;
 `;
 
 const StyledToggle = styled.button`
@@ -27,14 +31,15 @@ const StyledToggle = styled.button`
 `;
 
 const StyledList = styled.ul`
-  position: fixed;
-
+  position: absolute;
   background-color: var(--color-grey-0);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   border-radius: var(--border-radius-md);
-
-  right: ${(props) => props.position.x}px;
-  top: ${(props) => props.position.y}px;
+  top: 105%;
+  right: -5%;
+  z-index: 100;
+  /* left: ${(props) => props.position.x}px;
+  top: ${(props) => props.position.y}px; */
 `;
 
 const StyledButton = styled.button`
@@ -66,7 +71,9 @@ const MenusContext = createContext();
 
 function Menus({ children }) {
   const [activeMenuId, setActiveMenuId] = useState(null);
-  const openMenu = useCallback((id) => setActiveMenuId(id), [setActiveMenuId]);
+  const [position, setPosition] = useState(null);
+
+  const openMenu = setActiveMenuId;
   const closeMenu = useCallback(() => setActiveMenuId(null), [setActiveMenuId]);
   const isOpen = useCallback(
     (id) => id === activeMenuId,
@@ -74,34 +81,63 @@ function Menus({ children }) {
   );
 
   return (
-    <MenusContext.Provider value={{ openMenu, closeMenu, isOpen }}>
+    <MenusContext.Provider
+      value={{ openMenu, closeMenu, isOpen, setPosition, position }}
+    >
       {children}
     </MenusContext.Provider>
   );
 }
 
-function Menu({ children }) {
-  return <div>{children}</div>;
-}
 function Toggle({ id }) {
-  const { isOpen, openMenu, closeMenu } = useContext(MenusContext);
-  const isClosed = !isOpen(id);
+  const { isOpen, openMenu, closeMenu, setPosition } = useContext(MenusContext);
+
+  function handleClick(e) {
+    const rect = e.target.closest("button").getBoundingClientRect();
+    setPosition({ x: rect.x, y: rect.y + rect.height });
+    isOpen(id) ? closeMenu() : openMenu(id);
+  }
+
   return (
-    <button onClick={() => (isClosed ? openMenu(id) : closeMenu())}>
-      {isClosed ? "OPEN" : "CLOSE"}
-    </button>
+    <StyledToggle id="toggleBtn" onClick={handleClick}>
+      <HiEllipsisVertical />
+    </StyledToggle>
   );
 }
 function List({ id, children }) {
-  const { isOpen } = useContext(MenusContext);
+  const { isOpen, position, closeMenu } = useContext(MenusContext);
+  /*
+   *
+   */
+  function addCheckAgainstTuggleBtn(eventTarget) {
+    return eventTarget, eventTarget.closest("#toggleBtn") === null;
+  }
+
+  const ref = useOutsideModalClose(closeMenu, addCheckAgainstTuggleBtn);
   if (!isOpen(id)) return null;
-  return <div>{children}</div>;
+  return (
+    <StyledList ref={ref} position={position}>
+      {children}
+    </StyledList>
+  );
 }
-function Button({ children }) {
-  return <button>{children}</button>;
+function Button({ icon, children, onClick }) {
+  const { closeMenu } = useContext(MenusContext);
+  function handleClick() {
+    onClick?.();
+    closeMenu();
+  }
+
+  return (
+    <li>
+      <StyledButton onClick={handleClick}>
+        {icon} <span>{children}</span>
+      </StyledButton>
+    </li>
+  );
 }
 
-Menus.Menu = Menu;
+Menus.Menu = StyledMenu;
 Menus.Toggle = Toggle;
 Menus.List = List;
 Menus.Button = Button;
