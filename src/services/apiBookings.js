@@ -1,24 +1,36 @@
 import { getToday } from "../utils/helpers";
 import supabase from "./supabase";
+import { RESULTS_PER_PAGE } from "../utils/constants";
 
-export async function getBookings({ filter, sortBy }) {
+export async function getBookings({ filter = "all", sortBy, page = 1 }) {
   let query = supabase
     .from("bookings")
-    .select("*, cabins(name), guests(fullName, email)");
+    .select("*, cabins(name), guests(fullName, email)", { count: "exact" });
 
+  // FILTER
   if (filter) query = query[filter.method](filter.field, filter.value);
+
+  // SORT
   if (sortBy)
     query = query.order(sortBy.sortField, {
       ascending: sortBy.sortDirection === "asc",
     });
-  const { data, error } = await query;
+
+  // PAGINATION
+  query = query.range(
+    (page - 1) * RESULTS_PER_PAGE, // f.e. TOTAL = 5 from 0 to 4 [0, 4]
+    page * RESULTS_PER_PAGE - 1
+  );
+  const { data: bookings, error, count } = await query;
 
   if (error) {
-    console.error(error);
-    throw new Error("Booking not found");
+    throw new Error(
+      error?.message === "Requested range not satisfiable"
+        ? "Invalid page number."
+        : "Bookings not found."
+    );
   }
-
-  return data;
+  return { bookings, count };
 }
 
 export async function getBooking(id) {

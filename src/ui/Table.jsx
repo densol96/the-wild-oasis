@@ -39,7 +39,7 @@ const StyledBody = styled.section`
   margin: 0.4rem 0;
 `;
 
-const Footer = styled.footer`
+const StyledFooter = styled.footer`
   background-color: var(--color-grey-50);
   display: flex;
   justify-content: center;
@@ -60,9 +60,9 @@ const Empty = styled.p`
 
 const TableContext = createContext();
 
-function Table({ columns, children }) {
+function Table({ columns, children, error }) {
   return (
-    <TableContext.Provider value={{ columns }}>
+    <TableContext.Provider value={{ columns, error }}>
       <StyledTable role="table">{children}</StyledTable>
     </TableContext.Provider>
   );
@@ -87,8 +87,16 @@ function Row({ children }) {
 }
 
 function Body({ data, render }) {
-  if (data.length === 0) return <Empty>No data to show at the moment</Empty>;
+  const { error } = useContext(TableContext);
+  if (error) return <Empty>{error}</Empty>;
+  if (data?.length === 0) return <Empty>No data to show at the moment</Empty>;
   return <StyledBody>{data.map(render)}</StyledBody>;
+}
+
+function Footer({ children }) {
+  const { error } = useContext(TableContext);
+  if (error) return null;
+  return <StyledFooter>{children}</StyledFooter>;
 }
 
 Table.Header = Header;
