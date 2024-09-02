@@ -55,6 +55,8 @@ const StyledButton = styled.button`
   align-items: center;
   gap: 1.6rem;
 
+  white-space: nowrap;
+
   &:hover {
     background-color: var(--color-grey-50);
   }
@@ -131,7 +133,7 @@ function Button({ icon, children, onClick }) {
   return (
     <li>
       <StyledButton onClick={handleClick}>
-        {icon} <span>{children}</span>
+        {icon} <p>{children}</p>
       </StyledButton>
     </li>
   );
