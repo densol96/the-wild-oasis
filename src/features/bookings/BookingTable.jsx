@@ -31,7 +31,7 @@ function BookingTable() {
         <Table.Body
           data={bookings}
           render={(booking) => (
-            <BookingRow key={booking.id} booking={booking} />
+            <BookingRow count={count} key={booking.id} booking={booking} />
           )}
         />
         <Table.Footer>

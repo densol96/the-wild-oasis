@@ -1,14 +1,25 @@
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
-import { format, isToday } from "date-fns";
+import { HiEye, HiTrash } from "react-icons/hi";
+import {
+  HiArrowDownOnSquare,
+  HiArrowUpOnSquare,
+  HiSquare2Stack,
+} from "react-icons/hi2";
+import toast from "react-hot-toast";
 
 import Tag from "../../ui/Tag";
 import Table from "../../ui/Table";
 import Menus from "../../ui/Menus";
+import Modal from "../../ui/Modal";
+
+import useDeleteBooking from "./useDeleteBooking";
+import useCheckout from "../../features/check-in-out/useCheckout";
 import { formatCurrency } from "../../utils/helpers";
 import { formatDistanceFromNow } from "../../utils/helpers";
-import { HiEye } from "react-icons/hi";
-import { HiArrowDownOnSquare, HiSquare2Stack } from "react-icons/hi2";
-import { useNavigate } from "react-router-dom";
+import { format, isToday } from "date-fns";
+import ConfirmDelete from "../../ui/ConfirmDelete";
+import { RESULTS_PER_PAGE } from "../../utils/constants";
 
 const Cabin = styled.div`
   font-size: 1.6rem;
@@ -50,14 +61,24 @@ function BookingRow({
     guests: { fullName: guestName, email },
     cabins: { name: cabinName },
   },
+  count,
 }) {
   const navigate = useNavigate();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = searchParams.get("page") || 1;
+  const goToPreviousPageAfterDelete =
+    count - (currentPage - 1) * RESULTS_PER_PAGE === 1 && currentPage > 1;
 
   const statusToTagName = {
     unconfirmed: "blue",
     "checked-in": "green",
     "checked-out": "silver",
   };
+
+  const { checkout, isCheckingOut } = useCheckout();
+  const { isDeleting, deleteBooking } = useDeleteBooking();
+  const isProcessing = isCheckingOut || isDeleting;
 
   return (
     <Table.Row>
@@ -86,23 +107,56 @@ function BookingRow({
       <Amount>{formatCurrency(totalPrice)}</Amount>
 
       <Menus.Menu>
-        <Menus.Toggle id={bookingId} />
-        <Menus.List id={bookingId}>
-          <Menus.Button
-            onClick={() => navigate(`/bookings/${bookingId}`)}
-            icon={<HiEye />}
-          >
-            See details
-          </Menus.Button>
-          {status === "unconfirmed" && (
+        <Modal>
+          <Menus.Toggle id={bookingId} />
+          <Menus.List id={bookingId}>
             <Menus.Button
-              onClick={() => navigate(`/checkin/${bookingId}`)}
-              icon={<HiArrowDownOnSquare />}
+              onClick={() => navigate(`/bookings/${bookingId}`)}
+              icon={<HiEye />}
             >
-              Check in
+              See details
             </Menus.Button>
-          )}
-        </Menus.List>
+            {status === "unconfirmed" && (
+              <Menus.Button
+                onClick={() => navigate(`/checkin/${bookingId}`)}
+                icon={<HiArrowDownOnSquare />}
+              >
+                Check in
+              </Menus.Button>
+            )}
+            {status === "checked-in" && (
+              <Menus.Button
+                onClick={() => checkout(bookingId)}
+                icon={<HiArrowUpOnSquare />}
+                disabled={isProcessing}
+              >
+                Check out
+              </Menus.Button>
+            )}
+            <Modal.Open opensWhat="delete">
+              <Menus.Button icon={<HiTrash />} disabled={isProcessing}>
+                Delete booking
+              </Menus.Button>
+            </Modal.Open>
+          </Menus.List>
+          <Modal.Window name="delete">
+            <ConfirmDelete
+              resourceName="booking"
+              disabled={isDeleting}
+              onConfirm={() =>
+                deleteBooking(bookingId, {
+                  onSuccess: () => {
+                    if (goToPreviousPageAfterDelete) {
+                      // navigate(`/bookings?page=${currentPage - 1}`);
+                      searchParams.set("page", currentPage - 1);
+                      setSearchParams(searchParams);
+                    }
+                  },
+                })
+              }
+            />
+          </Modal.Window>
+        </Modal>
       </Menus.Menu>
     </Table.Row>
   );
