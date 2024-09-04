@@ -44,7 +44,7 @@ function CreateCabinForm({ cabin, onCloseModal }) {
 
   // function ifNotPassedValidation(errors) {} // optional
   return (
-    <Form onSubmit={handleSubmit(submit)}>
+    <Form type="modal" onSubmit={handleSubmit(submit)}>
       <FormRow label="Cabin name">
         <Input
           type="text"
