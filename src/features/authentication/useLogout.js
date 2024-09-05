@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 function useLogout() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { mutate: logout, isLoading } = useMutation({
+  const { mutate: logout, isLoading: isLoggingOut } = useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
       queryClient.invalidateQueries("user");
@@ -13,7 +13,7 @@ function useLogout() {
       //   navigate("/login", { replace: true });
     },
   });
-  return { logout, isLoading };
+  return { logout, isLoggingOut };
 }
 
 export default useLogout;

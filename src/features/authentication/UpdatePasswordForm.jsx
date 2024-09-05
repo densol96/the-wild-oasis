@@ -4,16 +4,32 @@ import Form from "../../ui/Form";
 import FormRow from "../../ui/FormRow";
 import Input from "../../ui/Input";
 
-import { useUpdateUser } from "./useUpdateUser";
+import useUser from "./useUser";
+import useLogout from "./useLogout";
+import useUpdateUser from "./useUpdateUser";
+import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 function UpdatePasswordForm() {
   const { register, handleSubmit, formState, getValues, reset } = useForm();
   const { errors } = formState;
-
   const { updateUser, isUpdating } = useUpdateUser();
+  const { logout, isLoggingOut } = useLogout();
 
   function onSubmit({ password }) {
-    updateUser({ password }, { onSuccess: reset });
+    updateUser(
+      { password },
+      {
+        onSuccess: () => {
+          toast.success(
+            "Password has been successfully changed! You wil be redirected to login page now!"
+          );
+          setTimeout(() => {
+            logout();
+          }, 1500);
+        },
+      }
+    );
   }
 
   return (
@@ -54,7 +70,12 @@ function UpdatePasswordForm() {
         />
       </FormRow>
       <FormRow>
-        <Button onClick={reset} type="reset" variation="secondary">
+        <Button
+          onClick={reset}
+          type="reset"
+          variation="secondary"
+          disabled={isUpdating}
+        >
           Cancel
         </Button>
         <Button disabled={isUpdating}>Update password</Button>

@@ -1,4 +1,6 @@
 import styled from "styled-components";
+import useUser from "./useUser";
+import { supabaseUrl } from "../../services/supabase";
 
 const StyledUserAvatar = styled.div`
   display: flex;
@@ -19,3 +21,25 @@ const Avatar = styled.img`
   border-radius: 50%;
   outline: 2px solid var(--color-grey-100);
 `;
+
+function UserAvatar() {
+  const { user } = useUser();
+  const { email } = user;
+  const { fullName, avatar } = user.user_metadata;
+
+  return (
+    <StyledUserAvatar>
+      <Avatar
+        src={
+          avatar
+            ? `${supabaseUrl}/storage/v1/object/public/avatars/${email}?timestamp=${Date.now()}`
+            : "default-user.jpg"
+        }
+        alt={`Avatar of ${fullName}`}
+      />
+      <span>{fullName || "User"}</span>
+    </StyledUserAvatar>
+  );
+}
+
+export default UserAvatar;
