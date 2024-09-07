@@ -22,25 +22,19 @@ const TableHeader = styled.header`
   padding: 1.6rem 2.4rem;
 `;
 
-function CabinTable() {
-  const { isLoading, cabins, error } = useCabins();
-  const [searchParams] = useSearchParams();
-
-  if (isLoading) return <Spinner />;
-
-  // FILTER
-  const filterValue = searchParams.get("discount") || "all";
+function filterCabins(filterValue, cabins) {
   let filteredCabins;
   if (filterValue === "all") filteredCabins = cabins;
   else if (filterValue === "no-discount")
     filteredCabins = cabins.filter((cabin) => cabin.discount === 0);
   else filteredCabins = cabins.filter((cabin) => cabin.discount > 0);
+  return filteredCabins;
+}
 
-  // SORT
-  const sortValue = searchParams.get("sortBy") || "name-asc";
+function sortCabins(sortValue, cabins) {
   const [field, direction] = sortValue.split("-");
   const modifier = direction === "asc" ? 1 : -1;
-  const sortedCabins = filteredCabins.sort((cabinOne, cabinTwo) => {
+  const sortedCabins = cabins.sort((cabinOne, cabinTwo) => {
     if (typeof cabinOne[field] === "string") {
       let result =
         (cabinOne[field].toLowerCase() > cabinTwo[field].toLowerCase()
@@ -51,6 +45,21 @@ function CabinTable() {
       return modifier * (cabinOne[field] - cabinTwo[field]);
     }
   });
+  return sortedCabins;
+}
+
+function CabinTable() {
+  const { isLoading, cabins, error } = useCabins();
+  const [searchParams] = useSearchParams();
+
+  if (isLoading) return <Spinner />;
+
+  // FILTER
+  const filterValue = searchParams.get("discount") || "all";
+  const filteredCabins = filterCabins(filterValue, cabins);
+  // SORT
+  const sortValue = searchParams.get("sortBy") || "name-asc";
+  const filteredAndSortedCabins = sortCabins(sortValue, filteredCabins);
 
   return (
     <Menus>
@@ -64,7 +73,7 @@ function CabinTable() {
           <div></div>
         </Table.Header>
         <Table.Body
-          data={sortedCabins}
+          data={filteredAndSortedCabins}
           render={(cabin) => <CabinRow cabin={cabin} key={cabin.id} />}
         />
       </Table>

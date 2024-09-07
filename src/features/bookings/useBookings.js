@@ -32,20 +32,31 @@ function useBookings(field = "status") {
     queryFn: () => getBookings({ filter, sortBy, page }),
     retry: 1,
   });
+
+  /*
+   * Supabase only triggers an error if we are tring to get >= +2 pages over the existing totalPages.
+   * Need to trigger an error when we are 1 page over the limit (in a sorted category).
+   * In all => simply keep "No data" (when length === 0 in the table)
+   */
   const errorMessage =
-    error?.message === "Invalid page number."
-      ? error?.message + " You are being redirected to the 1st page."
+    error?.message === "Invalid page number." ||
+    (!(!filterValue || filterValue === "all") && bookings?.length === 0)
+      ? "Invalid page number. You are being redirected to the 1st page."
       : error?.message;
+
   useEffect(() => {
     let timeourId;
-    if (error?.message === "Invalid page number.") {
+    if (
+      errorMessage ===
+      "Invalid page number. You are being redirected to the 1st page."
+    ) {
       timeourId = setTimeout(() => {
         searchParams.set("page", 1);
         setSearchParams(searchParams);
       }, 3000);
     }
     return () => clearTimeout(timeourId);
-  }, [error]);
+  }, [errorMessage]);
 
   // PRE-FETCH DATA
   if (page < count / RESULTS_PER_PAGE) {
