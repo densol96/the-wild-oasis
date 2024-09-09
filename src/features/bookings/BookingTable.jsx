@@ -16,8 +16,6 @@ function BookingTable() {
 
   if (isLoading) return <Spinner />;
 
-  console.log(errorMessage, bookings);
-
   return (
     <Menus>
       <Table error={errorMessage} columns="0.6fr 2fr 2.4fr 1.4fr 1fr 3.2rem">

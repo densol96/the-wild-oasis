@@ -108,11 +108,9 @@ function Toggle({ id }) {
 }
 function List({ id, children }) {
   const { isOpen, position, closeMenu } = useContext(MenusContext);
-  /*
-   *
-   */
+
   function addCheckAgainstTuggleBtn(eventTarget) {
-    return eventTarget, eventTarget.closest("#toggleBtn") === null;
+    return eventTarget.closest("#toggleBtn") === null;
   }
 
   const ref = useOutsideModalClose(closeMenu, addCheckAgainstTuggleBtn);
