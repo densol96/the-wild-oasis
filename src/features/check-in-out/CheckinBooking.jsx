@@ -17,7 +17,7 @@ import { formatCurrency } from "../../utils/helpers";
 import useCheckin from "./useCheckin";
 import useExtractingSettings from "../settings/useExtractingSettings";
 import Tag from "../../ui/Tag";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Box = styled.div`
   /* Box */
@@ -42,7 +42,7 @@ function CheckinBooking() {
   const { settings = {}, isLoading: isLoadingSettings } =
     useExtractingSettings();
   const { breakfastPrice } = settings;
-
+  const [searchParams] = useSearchParams();
   if (isLoading || isLoadingSettings) return <Spinner />;
 
   const {
@@ -56,21 +56,34 @@ function CheckinBooking() {
   } = booking;
 
   function handleCheckin() {
+    const goBackToDashboard = searchParams.get("navigateBack");
+    const onSuccess = goBackToDashboard
+      ? {
+          onSuccess: () => navigate("/dashboard"),
+        }
+      : {};
+
     if (!confirmPaid) return;
     if (addBreakfast) {
-      checkin({
-        bookingId,
-        breakfast: {
-          hasBreakfast: true,
-          extrasPrice: optionalBreakfastPrice,
-          totalPrice: totalPrice + optionalBreakfastPrice,
+      checkin(
+        {
+          bookingId,
+          breakfast: {
+            hasBreakfast: true,
+            extrasPrice: optionalBreakfastPrice,
+            totalPrice: totalPrice + optionalBreakfastPrice,
+          },
         },
-      });
+        onSuccess
+      );
     } else {
-      checkin({
-        bookingId,
-        breakfast: {},
-      });
+      checkin(
+        {
+          bookingId,
+          breakfast: {},
+        },
+        onSuccess
+      );
     }
   }
   const optionalBreakfastPrice = breakfastPrice * numNights * numGuests;

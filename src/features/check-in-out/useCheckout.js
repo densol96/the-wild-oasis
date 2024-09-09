@@ -17,7 +17,8 @@ function useCheckout() {
         active: true,
       });
     },
-    onError: () => {
+    onError: (e) => {
+      console.log(e);
       toast.error("There was a problem while checkin out");
     },
   });
